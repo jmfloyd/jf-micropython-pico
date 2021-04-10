@@ -40,6 +40,7 @@
 #include "pico/bootrom.h"
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
+#include "hardware/rosc.h"
 
 #define RP2_RESET_PWRON (1)
 #define RP2_RESET_WDT (3)
@@ -107,10 +108,13 @@ STATIC mp_obj_t machine_idle(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(machine_idle_obj, machine_idle);
 
 STATIC mp_obj_t machine_lightsleep(size_t n_args, const mp_obj_t *args) {
+
     if (n_args == 0) {
-        for (;;) {
-            MICROPY_EVENT_POLL_HOOK
-        }
+
+        rosc_set_dormant(ROSC_DORMANT_VALUE_DORMANT);
+//         for (;;) {
+//             MICROPY_EVENT_POLL_HOOK
+//         }
     } else {
         mp_hal_delay_ms(mp_obj_get_int(args[0]));
     }
@@ -149,6 +153,13 @@ STATIC const mp_rom_map_elem_t machine_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_idle),                MP_ROM_PTR(&machine_idle_obj) },
     { MP_ROM_QSTR(MP_QSTR_lightsleep),          MP_ROM_PTR(&machine_lightsleep_obj) },
     { MP_ROM_QSTR(MP_QSTR_deepsleep),           MP_ROM_PTR(&machine_deepsleep_obj) },
+    { MP_ROM_QSTR(MP_QSTR_IDLE),                MP_ROM_INT((1)) },
+    { MP_ROM_QSTR(MP_QSTR_SLEEP),               MP_ROM_INT((2)) },
+    { MP_ROM_QSTR(MP_QSTR_DEEP),                MP_ROM_INT((4)) },
+    { MP_ROM_QSTR(MP_QSTR_WAKE_LEVEL_LOW),      MP_ROM_INT((1)) },
+    { MP_ROM_QSTR(MP_QSTR_WAKE_LEVEL_HIGH),     MP_ROM_INT((2)) },
+    { MP_ROM_QSTR(MP_QSTR_WAKE_EDGE_LOW),       MP_ROM_INT((4)) },
+    { MP_ROM_QSTR(MP_QSTR_WAKE_EDGE_HIGH),      MP_ROM_INT((8)) },
 
     { MP_ROM_QSTR(MP_QSTR_disable_irq),         MP_ROM_PTR(&machine_disable_irq_obj) },
     { MP_ROM_QSTR(MP_QSTR_enable_irq),          MP_ROM_PTR(&machine_enable_irq_obj) },

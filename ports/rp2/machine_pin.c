@@ -315,11 +315,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(machine_pin_toggle_obj, machine_pin_toggle);
 
 // pin.irq(handler=None, trigger=IRQ_FALLING|IRQ_RISING, hard=False)
 STATIC mp_obj_t machine_pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_handler, ARG_trigger, ARG_hard };
+    enum { ARG_handler, ARG_trigger, ARG_hard, ARG_wake };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_handler, MP_ARG_OBJ, {.u_rom_obj = MP_ROM_NONE} },
         { MP_QSTR_trigger, MP_ARG_INT, {.u_int = GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE} },
         { MP_QSTR_hard, MP_ARG_BOOL, {.u_bool = false} },
+        { MP_QSTR_wake, MP_ARG_OBJ, {.u_obj = mp_const_none} },
     };
     machine_pin_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -361,6 +362,30 @@ STATIC mp_obj_t machine_pin_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(machine_pin_irq_obj, 1, machine_pin_irq);
 
+// pin.dormant_wake_irq(event=IRQ_FALLING|IRQ_RISING)
+STATIC mp_obj_t machine_pin_dormant_wake_irq(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    enum { ARG_event };
+    static const mp_arg_t allowed_args[] = {
+//         { MP_QSTR_gpio, MP_ARG_OBJ, {.u_rom_obj = MP_ROM_NONE} },
+        { MP_QSTR_event, MP_ARG_INT, {.u_int = GPIO_IRQ_LEVEL_LOW | GPIO_IRQ_EDGE_FALL} },
+    };
+    machine_pin_obj_t *self = MP_OBJ_TO_PTR(pos_args[0]);
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args - 1, pos_args + 1 , kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+    machine_pin_irq_obj_t *irq = MP_STATE_PORT(machine_pin_irq_obj[self->id]);
+
+    // Check if irq is allocated
+    if (irq != NULL) {
+        // mp_int_t event = args[ARG_event].u_int;
+        gpio_set_dormant_irq_enabled(self->id, args[ARG_event].u_int, true);
+    } else {
+        mp_raise_ValueError("pin irq is not defined");
+    }
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(machine_pin_dormant_wake_irq_obj, 1, machine_pin_dormant_wake_irq);
+
 STATIC const mp_rom_map_elem_t machine_pin_locals_dict_table[] = {
     // instance methods
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&machine_pin_init_obj) },
@@ -371,6 +396,7 @@ STATIC const mp_rom_map_elem_t machine_pin_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_on), MP_ROM_PTR(&machine_pin_high_obj) },
     { MP_ROM_QSTR(MP_QSTR_toggle), MP_ROM_PTR(&machine_pin_toggle_obj) },
     { MP_ROM_QSTR(MP_QSTR_irq), MP_ROM_PTR(&machine_pin_irq_obj) },
+    { MP_ROM_QSTR(MP_QSTR_dormant_wake_irq), MP_ROM_PTR(&machine_pin_dormant_wake_irq_obj) },
 
     // class constants
     { MP_ROM_QSTR(MP_QSTR_IN), MP_ROM_INT(GPIO_MODE_IN) },

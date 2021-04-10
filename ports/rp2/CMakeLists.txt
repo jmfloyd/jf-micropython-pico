@@ -73,7 +73,7 @@ set(MICROPY_SOURCE_PORT
     mpthreadport.c
     rp2_flash.c
     rp2_pio.c
-    tusb_port.c
+    #tusb_port.c
     uart.c
 )
 
@@ -111,6 +111,7 @@ set(PICO_SDK_COMPONENTS
     hardware_pwm
     hardware_regs
     hardware_rtc
+    hardware_rosc
     hardware_spi
     hardware_structs
     hardware_sync
@@ -127,7 +128,8 @@ set(PICO_SDK_COMPONENTS
     pico_sync
     pico_time
     pico_unique_id
-    tinyusb_device
+    pico_stdio_usb
+    #tinyusb_device
 )
 
 # Define mpy-cross flags and frozen manifest
@@ -164,6 +166,8 @@ target_compile_definitions(${MICROPY_TARGET} PRIVATE
     PICO_NO_PROGRAM_VERSION_STRING=1 # do it ourselves in main.c
     MICROPY_BUILD_TYPE="${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION} ${CMAKE_BUILD_TYPE}"
     PICO_NO_BI_STDIO_UART=1 # we call it UART REPL
+    #PICO_STDIO_UART=0
+    PICO_STDIO_USB=1
 )
 
 target_link_libraries(${MICROPY_TARGET}
